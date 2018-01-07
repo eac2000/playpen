@@ -2,3 +2,4 @@
 *-cloudimg-console.log
 *.vagrant*
 vagrant-resources/files/id_rsa*
+vagrant-projects/ansible_env/ansible*
