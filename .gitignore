@@ -1,3 +1,4 @@
 .vagrant
 *-cloudimg-console.log
 *.vagrant*
+vagrant-resources/files/id_rsa*
