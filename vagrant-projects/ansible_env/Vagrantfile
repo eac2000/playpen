@@ -1,22 +1,19 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-#$sshSscript == <<SCRIPT
-#config.vm.provision "file", source: "id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
-# public_key = File.read("id_rsa.pub")
-# config.vm.provision :shell, :inline =>"
-#     echo 'Copying ansible-vm public SSH Keys to the VM'
-#     mkdir -p /home/vagrant/.ssh
-#     chmod 700 /home/vagrant/.ssh
-#     echo '#{public_key}' >> /home/vagrant/.ssh/authorized_keys
-#     chmod -R 600 /home/vagrant/.ssh/authorized_keys
-#     echo 'Host 192.168.*.*' >> /home/vagrant/.ssh/config
-#     echo 'StrictHostKeyChecking no' >> /home/vagrant/.ssh/config
-#     echo 'UserKnownHostsFile /dev/null' >> /home/vagrant/.ssh/config
-#     chmod -R 600 /home/vagrant/.ssh/config
-#     ", privileged: false
-#echo "hello world"
-#SCRIPT
+$sshKeyScript = <<SCRIPT
+echo 'Copying ansible-vm public SSH Keys to the VM'
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+chmod -R 700 /home/vagrant/.ssh
+SCRIPT
+$executeAnsible = <<SCRIPT
+if [[ `hostname` == "control" ]]; then
+  cd ansible
+  for component in "loadbalancer.yml webserver.yml database.yml"; do
+     ansible-playbook ${component}
+  done
+fi
+SCRIPT
 
 
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
@@ -39,7 +36,7 @@ Vagrant.configure("2") do |config|
 ######################################################
   config.vbguest.auto_update = false
 
-  config.vm.provision "file", source: "~/projects/training/vagrant-resources/files/git-config", destination: "~/.gitconfig"
+  config.vm.provision "file", source: "~/workspace/training/vagrant-resources/files/git-config", destination: "~/.gitconfig"
 
   config.vm.define "web1" do |web1|
     web1.vm.hostname = "app01"
@@ -65,29 +62,26 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "controller" do |controller|
     controller.vm.hostname = "control"
-    controller.vm.provision "file", source: "~/projects/training/vagrant-resources/files/id_rsa", destination: "~/.ssh/id_rsa"
-    controller.vm.provision "file", source: "~/projects/training/vagrant-resources/ansible", destination: "~/ansible"
+    controller.vm.provision "file", source: "~/workspace/training/vagrant-resources/files/id_rsa", destination: "~/.ssh/id_rsa"
+    controller.vm.provision "file", source: "~/workspace/training/vagrant-resources/ansible", destination: "~/ansible"
     controller.vm.network "private_network", ip: "192.168.10.6"
     controller.vm.provision "shell", path: "https://raw.githubusercontent.com/eac2000/training/master/vagrant-resources/scripts/ubuntu-controller.sh"
+    #controller.vm.provision "shell", inline: $executeAnsible, privileged: false
+    config.vm.provision "shell", inline: "chmod -R 700 ~/.ssh", privileged: false
   end
 
+  config.vm.provision "shell", path: "https://raw.githubusercontent.com/eac2000/training/master/vagrant-resources/scripts/ubuntu-common.sh"
   #==========================================================================
   # ssh key set-up
-  #config.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/id_rsa.pub"
-  #config.vm.provision "file", source: "~/projects/training/vagrant-resources/files/id_rsa.pub", destination: "/home/root/.ssh/id_rsa.pub"
-  config.vm.provision "file", source: "~/projects/training/vagrant-resources/files/id_rsa.pub", destination: "/home/ubuntu/.ssh/id_rsa.pub"
-  config.vm.provision "file", source: "~/projects/training/vagrant-resources/scripts/sort-ssh-keys.sh", destination: "/home/ubuntu/.ssh/sort-ssh-keys"
-  #config.vm.provision "shell", inline: "/bin/sh /home/ubuntu/.ssh/sort-ssh-keys.sh"
-  #config.vm.provision "shell", path: "https://raw.githubusercontent.com/eac2000/training/master/vagrant-resources/scripts/sort-ssh-keys.sh"
-  config.ssh.forward_agent = true
-  config.ssh.keys_only = false
+  config.vm.provision "file", source: "~/workspace/training/vagrant-resources/files/id_rsa.pub", destination: "~/.ssh/id_rsa.pub"
+  config.vm.provision "shell", inline: $sshKeyScript, privileged: false
+  #config.ssh.forward_agent = true
+  #config.ssh.keys_only = false
   #config.ssh.password = "password"
   # Disables the vagrant generated key.
   # Uncomment if you only want access via user's key.
   #config.ssh.insert_key = false
   #==========================================================================
-  config.vm.provision "shell", path: "https://raw.githubusercontent.com/eac2000/training/master/vagrant-resources/scripts/ubuntu-common.sh"
-
 
 
 ######################################################
