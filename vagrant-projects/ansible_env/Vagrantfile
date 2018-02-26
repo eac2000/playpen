@@ -67,7 +67,7 @@ Vagrant.configure("2") do |config|
     controller.vm.network "private_network", ip: "192.168.10.6"
     controller.vm.provision "shell", path: "https://raw.githubusercontent.com/eac2000/training/master/vagrant-resources/scripts/ubuntu-controller.sh"
     #controller.vm.provision "shell", inline: $executeAnsible, privileged: false
-    config.vm.provision "shell", inline: "chmod -R 700 ~/.ssh", privileged: false
+    controller.vm.provision "shell", inline: "chmod -R 700 ~/.ssh", privileged: false
   end
 
   config.vm.provision "shell", path: "https://raw.githubusercontent.com/eac2000/training/master/vagrant-resources/scripts/ubuntu-common.sh"
@@ -75,6 +75,7 @@ Vagrant.configure("2") do |config|
   # ssh key set-up
   config.vm.provision "file", source: "~/workspace/training/vagrant-resources/files/id_rsa.pub", destination: "~/.ssh/id_rsa.pub"
   config.vm.provision "shell", inline: $sshKeyScript, privileged: false
+  config.vm.provision "shell", inline: "chmod -R 700 ~/.ssh", privileged: false
   #config.ssh.forward_agent = true
   #config.ssh.keys_only = false
   #config.ssh.password = "password"
