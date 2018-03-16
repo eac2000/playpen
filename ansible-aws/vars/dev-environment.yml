@@ -1,7 +1,7 @@
 ---
 # set these parameters to control the region, keypair, and AMI that are launched
 ec2_region: us-east-1
-instances_keypair: ec2-test
+instances_keypair: ec2-test-mac
 image_id: ami-428aa838
 
 # security groups to be created
